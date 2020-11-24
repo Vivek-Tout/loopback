@@ -1,0 +1,90 @@
+$lb
+[?] What's the name of your application? loopback-getting-started
+[?] Enter name of the directory to contain the project: loopback-getting-started
+
+creating models
+
+$ cd loopback-getting-started
+
+$ lb model
+[?] Enter the model name: CoffeeShop
+[?] Select the data-source to attach CoffeeShop to: (Use arrow keys)
+> db (memory)
+[?] Select model's base class: (Use arrow keys)
+  Model
+> PersistedModel
+ 
+  [?] Expose CoffeeShop via the REST API? (Y/n) Y
+  [?] Custom plural form (used to build REST URL):
+Enter an empty property name when done.
+[?] Property name: name
+   invoke   loopback:property
+[?] Property type: 
+> string
+  
+  Let's add another CoffeeShop property.
+? Property name: city
+? Property type: string
+? Required? Yes
+? Default value[leave blank for none]:
+$ lb datasource
+[?] Enter the data-source name:
+? Select the connector for mysqlDs: 
+> In-memory db (supported by StrongLoop)
+  
+  sample model.js for addition of additional data in model
+  module.exports = function(app) {
+  app.dataSources.mysqlDs.automigrate('CoffeeShop', function(err) {
+    if (err) throw err;
+
+    app.models.CoffeeShop.create([{
+      name: 'Bel Cafe',
+      city: 'Vancouver'
+    }, {
+      name: 'Three Bees Coffee House',
+      city: 'San Mateo'
+    }, {
+      name: 'Caffe Artigiano',
+      city: 'Vancouver'
+    }], function(err, coffeeShops) {
+      if (err) throw err;
+
+      console.log('Models created: \n', coffeeShops);
+    });
+  });
+};
+extending the api functions
+
+coffee-shop.js 
+
+module.exports = function(CoffeeShop) {};
+
+
+module.exports = function(CoffeeShop) {
+  CoffeeShop.status = function(cb) {
+    var currentDate = new Date();
+    var currentHour = currentDate.getHours();
+    var OPEN_HOUR = 6;
+    var CLOSE_HOUR = 20;
+    console.log('Current hour is %d', currentHour);
+    var response;
+    if (currentHour >= OPEN_HOUR && currentHour < CLOSE_HOUR) {
+      response = 'We are open for business.';
+    } else {
+      response = 'Sorry, we are closed. Open daily from 6am to 8pm.';
+    }
+    cb(null, response);
+  };
+  CoffeeShop.remoteMethod(
+    'status', {
+      http: {
+        path: '/status',
+        verb: 'get'
+      },
+      returns: {
+        arg: 'status',
+        type: 'string'
+      }
+    }
+  );
+};
